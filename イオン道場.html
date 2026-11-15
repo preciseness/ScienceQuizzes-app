@@ -1,0 +1,564 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>イオン道場</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: 1 column, 720px. Home = hero + set cards + review panel. Quiz = one question card with instant feedback. */
+:root{
+  --bg:#f3f6fa; --card:#ffffff; --ink:#12213a; --mute:#5a6a82; --line:#dfe6ef;
+  --accent:#1f6fe0; --accent-ink:#ffffff; --accent-soft:#e4eefc;
+  --ok:#14804a; --ok-soft:#e1f5ea; --ng:#c0392b; --ng-soft:#fdeaea;
+  --pos:#e0294f; --pos-soft:#ffe1e7; --neg:#1f6fe0; --neg-soft:#dce9fd;
+  --water:#d6e8fb; --gold:#f2c14e; --shadow:0 1px 2px rgba(18,33,58,.06),0 6px 20px rgba(18,33,58,.06);
+  --font:"Noto Sans JP","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1626; --card:#16213a; --ink:#eaf0fb; --mute:#9db0cc; --line:#2a3858;
+    --accent:#5b9bff; --accent-ink:#08152c; --accent-soft:#1b2f55;
+    --ok:#56d18f; --ok-soft:#14352a; --ng:#ff8a7a; --ng-soft:#3d1d22;
+    --pos:#ff7b94; --pos-soft:#4a1f2c; --neg:#6aa6ff; --neg-soft:#1b2f55;
+    --water:#1d3558; --gold:#f2c14e; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1626; --card:#16213a; --ink:#eaf0fb; --mute:#9db0cc; --line:#2a3858;
+  --accent:#5b9bff; --accent-ink:#08152c; --accent-soft:#1b2f55;
+  --ok:#56d18f; --ok-soft:#14352a; --ng:#ff8a7a; --ng-soft:#3d1d22;
+  --pos:#ff7b94; --pos-soft:#4a1f2c; --neg:#6aa6ff; --neg-soft:#1b2f55;
+  --water:#1d3558; --gold:#f2c14e; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.7;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto}
+h1,h2,h3{line-height:1.35;text-wrap:balance;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* hero */
+.hero{padding:28px 4px 8px}
+.eyebrow{font-size:13px;letter-spacing:.14em;color:var(--accent);font-weight:700}
+.hero h1{font-size:clamp(34px,8vw,48px);font-weight:900;letter-spacing:.02em;margin-top:6px}
+.hero p.lead{color:var(--mute);margin-top:12px;max-width:34em}
+.cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 26px;font-weight:700;min-height:48px}
+.cta:hover{filter:brightness(1.06)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.stat{flex:1 1 140px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.stat b{display:block;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.3}
+.stat span{font-size:12.5px;color:var(--mute)}
+
+.sec{margin-top:34px}
+.sec>h2{font-size:19px;font-weight:700;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.set{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.set:hover{transform:translateY(-2px);border-color:var(--accent)}
+.set .tag{font-size:12.5px;color:var(--accent);font-weight:700;letter-spacing:.06em}
+.set h3{font-size:18px;font-weight:700}
+.set p{font-size:14px;color:var(--mute)}
+.set .meta{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+.set .meta b{color:var(--ink)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.panel.focus{border-color:var(--ng)}
+.rv-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.rv-head .big{font-size:34px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums}
+.rv-head .big small{font-size:14px;font-weight:500;color:var(--mute);margin-left:4px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 18px;font-weight:700;min-height:46px}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.warn{background:var(--ng);color:#fff;border-color:var(--ng)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.weak{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.weak li{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:4px 10px;align-items:center;font-size:14px}
+.weak .nm{grid-column:1/-1;font-weight:500}
+.meter{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ng);border-radius:99px}
+.weak .pc{font-variant-numeric:tabular-nums;color:var(--mute);text-align:right}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.hist li{display:flex;justify-content:space-between;gap:10px;font-size:14px;border-bottom:1px solid var(--line);padding-bottom:8px;font-variant-numeric:tabular-nums}
+.hist li:last-child{border:0;padding:0}
+.hist span{color:var(--mute)}
+.empty{color:var(--mute);font-size:14.5px}
+.foot{margin-top:40px;font-size:12.5px;color:var(--mute);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:0;font-size:12.5px}
+
+/* quiz */
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ghost{background:none;border:0;color:var(--mute);padding:8px 6px;font-weight:500;min-height:44px}
+.qmeta{display:flex;gap:14px;font-size:14px;font-variant-numeric:tabular-nums;color:var(--mute)}
+.qmeta b{color:var(--ink)}
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:4px 0 16px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px;box-shadow:var(--shadow)}
+.unit{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.04em}
+.q{font-size:clamp(18px,4.6vw,21px);font-weight:700;margin:6px 0 18px;line-height:1.55}
+.q:focus{outline:none}
+.choices{display:grid;gap:10px}
+.ch{display:flex;gap:12px;align-items:center;text-align:left;width: 100%;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;min-height:54px;transition:border-color .12s,background .12s}
+.ch .k{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;font-size:13px}
+.ch span:last-child{min-width:0;overflow-wrap:anywhere}
+.ch:not([disabled]):hover{border-color:var(--accent);background:var(--accent-soft)}
+.ch.ok{border-color:var(--ok);background:var(--ok-soft)}
+.ch.ok .k{background:var(--ok);color:#fff}
+.ch.ng{border-color:var(--ng);background:var(--ng-soft)}
+.ch.ng .k{background:var(--ng);color:#fff}
+.ch[disabled]{cursor:default}
+.ch[disabled]:not(.ok):not(.ng){opacity:.55}
+.fb{margin-top:18px}
+.verdict{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;animation:pop .25s ease-out}
+.verdict.ok{color:var(--ok)}.verdict.ng{color:var(--ng)}
+.verdict .mk{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:18px}
+.verdict.ok .mk{background:var(--ok)}.verdict.ng .mk{background:var(--ng)}
+.ans{margin-top:6px;font-size:15px}
+.ans b{color:var(--ok)}
+.exp{margin-top:10px;font-size:15px;background:var(--accent-soft);border-radius:12px;padding:12px 14px}
+.figbox{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.nextrow{display:flex;justify-content:flex-end;margin-top:16px}
+@keyframes pop{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* figures */
+svg.fig{display:block;width:100%;max-width:440px;height:auto;margin:0 auto}
+svg.fig text{fill:var(--ink);font-size:12px;font-family:var(--font)}
+svg.fig .sm{font-size:10.5px;fill:var(--mute)}
+svg.fig .b{font-weight:700}
+svg.fig .pos{fill:var(--pos)} svg.fig .neg{fill:var(--neg)} svg.fig .okc{fill:var(--ok)}
+svg.fig .ln{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+svg.fig .wtr{fill:var(--water)}
+svg.fig .box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+svg.fig .bx2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.2}
+svg.fig .i-p{fill:var(--pos-soft);stroke:var(--pos);stroke-width:1.4}
+svg.fig .i-n{fill:var(--neg-soft);stroke:var(--neg);stroke-width:1.4}
+svg.fig .i-0{fill:var(--card);stroke:var(--mute);stroke-width:1.4}
+svg.fig .it{font-size:10px;font-weight:700}
+
+/* result */
+.res{text-align:center}
+.ring{width:170px;height:170px;margin:6px auto 0;position:relative}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring .trk{stroke:var(--line)}
+.ring .val{stroke:var(--accent);transition:stroke-dashoffset 1s ease-out}
+.ring .num{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.2}
+.ring .num b{font-size:40px;font-weight:900;font-variant-numeric:tabular-nums}
+.ring .num small{font-size:13px;color:var(--mute)}
+.res h2{font-size:22px;margin-top:14px}
+.res .pc{color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+.res .btns{justify-content:center;margin-top:18px}
+.miss{margin-top:22px;text-align:left}
+.miss h3{font-size:16px;margin-bottom:10px}
+.mi{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px;background:var(--card)}
+.mi summary{cursor:pointer;font-weight:500;font-size:15px}
+.mi .a{margin-top:8px;font-size:14.5px}
+.mi .a b{color:var(--ok)}
+.note-u{margin:20px 0 8px;font-size:14px;color:var(--accent);font-weight:700}
+@media (max-width:440px){.qcard{padding:18px 14px}.panel{padding:16px}}
+</style>
+
+<div class="wrap"><main id="app"></main></div>
+
+<script>
+/* ---------- データ(各問は 正解を先頭に書き、表示時にシャッフル) ---------- */
+const UNITS={1:"水溶液と電流",2:"電離と電離式①",3:"電離と電離式②",4:"原子の構造",5:"陽イオンのでき方",6:"陰イオンのでき方",7:"イオンの表し方",8:"電気分解① 塩化銅",9:"電気分解② 塩酸",10:"電気分解の整理",11:"イオンへのなりやすさ",12:"電池のしくみ①",13:"電池のしくみ②",14:"いろいろな電池",15:"酸・アルカリの性質",16:"酸・アルカリの電離",17:"イオンの移動",18:"pH",19:"中和①",20:"中和② 塩",21:"中和と水溶液の変化",22:"総合演習①",23:"総合演習②",24:"単元テストと振り返り"};
+const FIGKEY={1:'elec',2:'ionize',3:'ionize',4:'atom',5:'cation',6:'anion',7:'ionize',8:'cucl2',9:'hcl',10:'cucl2',11:'series',12:'daniell',13:'daniell',14:'battery',15:'litmus',16:'acidalk',17:'migrate',18:'ph',19:'neut',20:'neut',21:'neutchange',22:'cucl2',23:'daniell',24:'ionize'};
+const FIGQ={'2-3':'i:HCl','3-1':'i:CuCl2','3-2':'i:NaOH','3-3':'i:H2SO4','5-3':'cation:Cu','7-1':'list:OH⁻','7-2':'list:SO₄²⁻','7-3':'list:NH₄⁺','8-3':'i:HCl:acid','9-3':'i:HCl','10-3':'hcl','15-3':'mg','16-3':'i:BaOH2','19-3':'litmus','20-3':'baso4','22-2':'cation','22-3':'elec','23-2':'ph:2','18-1':'ph:7','18-2':'ph:3,11','23-1':'daniell:mass','23-3':'neut','24-1':'elec','24-2':'daniell','24-3':'neut'};
+const RAW=[
+[1,"水に溶かすと水溶液に電流が流れる物質を何というか。","電解質",["非電解質","溶媒","指示薬"],"水に溶けて電流が流れる物質が電解質。塩化ナトリウムや塩化水素が例。"],
+[1,"水に溶かしても電流が流れない物質を何というか。","非電解質",["電解質","金属","酸"],"砂糖やエタノールは水に溶けてもイオンに分かれないので、電流が流れない。"],
+[1,"次のうち、電解質はどれか。","塩化ナトリウム",["砂糖","エタノール","ブドウ糖"],"塩化ナトリウムは水に溶けるとイオンに分かれる。砂糖・エタノール・ブドウ糖は非電解質。"],
+[2,"電解質が水に溶けて、陽イオンと陰イオンに分かれることを何というか。","電離",["中和","電気分解","蒸発"],"電解質が水に溶けてイオンに分かれる現象を電離という。"],
+[2,"塩化ナトリウムの電離を表す式はどれか。","NaCl → Na⁺ + Cl⁻",["NaCl → Na⁻ + Cl⁺","NaCl → Na + Cl","NaCl → Na²⁺ + Cl²⁻"],"ナトリウムは+1の陽イオン、塩素は−1の陰イオンになる。"],
+[2,"塩化水素の電離を表す式はどれか。","HCl → H⁺ + Cl⁻",["HCl → H⁻ + Cl⁺","HCl → H₂ + Cl₂","HCl → H⁺ + 2Cl⁻"],"水素は陽イオン(H⁺)、塩素は陰イオン(Cl⁻)になる。塩化水素の水溶液が塩酸。"],
+[3,"塩化銅(CuCl₂)の電離を表す式はどれか。","CuCl₂ → Cu²⁺ + 2Cl⁻",["CuCl₂ → Cu⁺ + 2Cl⁻","CuCl₂ → Cu²⁺ + Cl⁻","CuCl₂ → Cu²⁻ + 2Cl⁺"],"銅イオンは2+、塩化物イオンは1−。Clが2個あるので 2Cl⁻ になり、電気の合計は0になる。"],
+[3,"水酸化ナトリウム(NaOH)の電離を表す式はどれか。","NaOH → Na⁺ + OH⁻",["NaOH → Na⁻ + OH⁺","NaOH → Na⁺ + O²⁻ + H⁺","NaOH → Na + OH"],"NaOH は Na⁺ と OH⁻(水酸化物イオン)に電離する。"],
+[3,"硫酸(H₂SO₄)の電離を表す式はどれか。","H₂SO₄ → 2H⁺ + SO₄²⁻",["H₂SO₄ → H⁺ + SO₄⁻","H₂SO₄ → 2H⁻ + SO₄²⁺","H₂SO₄ → H₂ + SO₄"],"水素イオン2個(+2)と硫酸イオン(2−)で、電気がつり合う。"],
+[4,"原子の中心にある、+の電気を持つ部分を何というか。","原子核",["電子","中性子","分子"],"原子の中心に原子核があり、そのまわりを−の電気を持つ電子が回っている。"],
+[4,"原子核をつくっている粒子の組み合わせはどれか。","陽子と中性子",["陽子と電子","中性子と電子","電子だけ"],"原子核は+の電気を持つ陽子と、電気を持たない中性子でできている。"],
+[4,"原子全体が電気を帯びていない理由はどれか。","陽子の数と電子の数が等しいから",["中性子が電気を打ち消すから","電子が原子核の中にあるから","電気を持つ粒子がないから"],"+の陽子と−の電子が同じ数なので、電気がつり合っている。"],
+[5,"原子が電子を失うと、何イオンになるか。","陽イオン",["陰イオン","中性子","分子"],"電子(−)が減ると、+の電気のほうが多くなり、陽イオンになる。"],
+[5,"ナトリウム原子が電子を1個失ってできるイオンはどれか。","Na⁺",["Na⁻","Na²⁺","Na"],"電子を1個失うと+が1つ多くなるので Na⁺ になる。"],
+[5,"銅原子が電子を2個失ってできるイオンはどれか。","Cu²⁺",["Cu⁺","Cu²⁻","Cu⁻"],"電子を2個失うと、+が2つ多くなり Cu²⁺ になる。"],
+[6,"原子が電子を受け取ると、何イオンになるか。","陰イオン",["陽イオン","中性子","分子"],"電子(−)が増えると、−の電気のほうが多くなり、陰イオンになる。"],
+[6,"塩素原子が電子を1個受け取ってできるイオンはどれか。","Cl⁻",["Cl⁺","Cl²⁻","Cl"],"電子を1個受け取ると−が1つ多くなるので Cl⁻(塩化物イオン)になる。"],
+[6,"電子を受け取った原子が−の電気を帯びる理由はどれか。","電子の数が陽子の数より多くなるから",["陽子の数が増えるから","中性子が減るから","原子核が壊れるから"],"陽子(+)の数は変わらず、電子(−)が増えるので、全体は−になる。"],
+[7,"水酸化物イオンを表すイオン式はどれか。","OH⁻",["OH⁺","H₂O","O²⁻"],"水酸化物イオンは OH⁻。アルカリ性のもとになるイオン。"],
+[7,"硫酸イオンを表すイオン式はどれか。","SO₄²⁻",["SO₄⁻","SO₃²⁻","SO₄²⁺"],"硫酸イオンは SO₄²⁻(2−の陰イオン)。"],
+[7,"アンモニウムイオン(NH₄⁺)は何イオンか。","陽イオン",["陰イオン","電気を帯びない","電子"],"右上の「+」は、+の電気を帯びた陽イオンであることを表す。"],
+[8,"塩化銅水溶液を電気分解したとき、陰極に付着する物質はどれか。","銅",["塩素","水素","酸素"],"Cu²⁺ が陰極で電子を受け取り、赤色の銅になって付着する。"],
+[8,"塩化銅水溶液を電気分解したとき、陽極から発生する気体はどれか。","塩素",["水素","酸素","窒素"],"Cl⁻ が陽極で電子を失い、塩素(Cl₂)になって発生する。"],
+[8,"塩化水素が水に溶けると、水溶液は何性を示すか。","酸性",["アルカリ性","中性","性質は変わらない"],"塩化水素は水に溶けて H⁺ と Cl⁻ に電離する。酸性のもとになるのは水素イオン(H⁺)で、塩化物イオン(Cl⁻)ではない。"],
+[9,"塩酸を電気分解したとき、陰極から発生する気体はどれか。","水素",["塩素","酸素","二酸化炭素"],"H⁺ が陰極で電子を受け取り、水素(H₂)になる。"],
+[9,"塩酸を電気分解したとき、陽極から発生する気体はどれか。","塩素",["水素","酸素","窒素"],"Cl⁻ が陽極で電子を失い、塩素(Cl₂)になる。"],
+[9,"塩酸の電離を表す式はどれか。","HCl → H⁺ + Cl⁻",["HCl → H⁻ + Cl⁺","HCl → 2H⁺ + Cl²⁻","HCl → H + Cl"],"塩化水素は H⁺ と Cl⁻ に電離する。"],
+[10,"電気分解で、陽イオンが引き寄せられる電極はどちらか。","陰極",["陽極","どちらでもない","両方"],"陽イオン(+)は−の電気を持つ陰極に引き寄せられる。"],
+[10,"塩化銅水溶液を電気分解したときの変化を表す式はどれか。","CuCl₂ → Cu + Cl₂",["CuCl₂ → Cu + 2Cl","CuCl₂ → Cu₂ + Cl","CuCl₂ → CuCl + Cl"],"塩化銅は分解されて、銅と塩素(分子 Cl₂)になる。"],
+[10,"電気分解で陰極から気体が発生する水溶液はどれか。","塩酸",["塩化銅水溶液","どちらも発生する","どちらも発生しない"],"塩酸の陰極からは水素が発生する。塩化銅水溶液の陰極には銅が付着する。"],
+[11,"硫酸銅水溶液に亜鉛板を入れると、亜鉛板の表面に付着する物質はどれか。","銅",["亜鉛","水素","酸素"],"亜鉛が Zn²⁺ になって溶け、水溶液中の Cu²⁺ が銅になって付着する。"],
+[11,"亜鉛と銅では、どちらが陽イオンになりやすいか。","亜鉛",["銅","同じ","判断できない"],"亜鉛のほうが陽イオンになりやすいので、銅イオンから電子を渡される形で銅が出てくる。"],
+[11,"陽イオンになりやすい順に並べたものはどれか。","マグネシウム → 亜鉛 → 銅",["銅 → 亜鉛 → マグネシウム","亜鉛 → マグネシウム → 銅","亜鉛 → 銅 → マグネシウム"],"マグネシウム > 亜鉛 > 銅 の順に陽イオンになりやすい。"],
+[12,"化学変化を利用して、電気エネルギーを取り出す装置を何というか。","電池",["電解質","電離","中和"],"化学エネルギーを電気エネルギーに変える装置が電池。"],
+[12,"ダニエル電池の−極になる金属はどれか。","亜鉛",["銅","炭素","マグネシウム"],"イオンになりやすい亜鉛が電子を出して−極になる。"],
+[12,"ダニエル電池の+極になる金属はどれか。","銅",["亜鉛","マグネシウム","鉄"],"銅イオンが電子を受け取って銅になる側が+極。"],
+[13,"ダニエル電池の−極で起こる変化はどれか。","Zn → Zn²⁺ + 2e⁻",["Zn²⁺ + 2e⁻ → Zn","Cu → Cu²⁺ + 2e⁻","Cu²⁺ + 2e⁻ → Cu"],"亜鉛原子が電子を2個失い、亜鉛イオンとして溶け出す。"],
+[13,"ダニエル電池の+極で起こる変化はどれか。","Cu²⁺ + 2e⁻ → Cu",["Cu → Cu²⁺ + 2e⁻","Zn → Zn²⁺ + 2e⁻","Zn²⁺ + 2e⁻ → Zn"],"銅イオンが電子を2個受け取り、銅になって付着する。"],
+[13,"導線の中を、電子はどう流れるか。","−極から+極へ",["+極から−極へ","流れない","水溶液の中だけを流れる"],"電子は−極から導線を通って+極へ流れる。電流の向きは逆(+極から−極)。"],
+[14,"充電して繰り返し使える電池を何というか。","二次電池",["一次電池","燃料電池","乾電池"],"二次電池(蓄電池)は充電でき、繰り返し使える。"],
+[14,"乾電池のように、充電できない電池を何というか。","一次電池",["二次電池","燃料電池","蓄電池"],"使い切りの電池が一次電池。"],
+[14,"水素と酸素から電気を取り出し、排出されるのが水だけの電池はどれか。","燃料電池",["一次電池","二次電池","太陽電池"],"燃料電池は 2H₂ + O₂ → 2H₂O の反応で電気を取り出す。"],
+[15,"酸性の水溶液につけたとき、青色リトマス紙は何色になるか。","赤色",["青色のまま","緑色","無色"],"酸性は青色リトマス紙を赤く変える。アルカリ性は赤色リトマス紙を青く変える。"],
+[15,"アルカリ性の水溶液にBTB液を加えると、何色になるか。","青色",["黄色","緑色","赤色"],"BTB液は 酸性:黄色、中性:緑色、アルカリ性:青色。"],
+[15,"酸性の水溶液にマグネシウムリボンを入れると、発生する気体はどれか。","水素",["酸素","二酸化炭素","塩素"],"酸性の水溶液は金属と反応して水素を発生させる。"],
+[16,"酸性の水溶液に共通して含まれるイオンはどれか。","水素イオン(H⁺)",["水酸化物イオン(OH⁻)","ナトリウムイオン(Na⁺)","塩化物イオン(Cl⁻)"],"酸は電離して水素イオンを生じる。酸性のもとは H⁺。"],
+[16,"アルカリ性の水溶液に共通して含まれるイオンはどれか。","水酸化物イオン(OH⁻)",["水素イオン(H⁺)","ナトリウムイオン(Na⁺)","塩化物イオン(Cl⁻)"],"アルカリは電離して水酸化物イオンを生じる。アルカリ性のもとは OH⁻。"],
+[16,"水酸化バリウム(Ba(OH)₂)の電離を表す式はどれか。","Ba(OH)₂ → Ba²⁺ + 2OH⁻",["Ba(OH)₂ → Ba⁺ + OH⁻","Ba(OH)₂ → Ba²⁺ + OH⁻","Ba(OH)₂ → Ba²⁻ + 2OH⁺"],"OH が2個あるので 2OH⁻。バリウムは Ba²⁺ になる。"],
+[17,"青色リトマス紙に塩酸をしみこませて電圧をかけると、赤く変色した部分はどちらへ広がるか。","陰極側",["陽極側","両側","動かない"],"酸性のもと H⁺ は+の電気を持つので、−の陰極側へ移動する。"],
+[17,"塩酸をしみこませた青色リトマス紙に電圧をかけると、赤色が陰極側へ広がった。酸性を示すイオンについてわかることはどれか。","+の電気を持つ(H⁺)",["−の電気を持つ","電気を持たない","判断できない"],"陰極(−)へ移動したので、+の電気を持つイオンだとわかる。"],
+[17,"赤色リトマス紙に水酸化ナトリウム水溶液をしみこませて電圧をかけると、青く変色した部分はどちらへ広がるか。","陽極側",["陰極側","両側","動かない"],"アルカリ性のもと OH⁻ は−の電気を持つので、+の陽極側へ移動する。"],
+[18,"pHが7の水溶液は何性か。","中性",["酸性","アルカリ性","強酸性"],"pH7が中性。7より小さいと酸性、大きいとアルカリ性。"],
+[18,"pH3の水溶液とpH11の水溶液の性質の組み合わせはどれか。","pH3は酸性、pH11はアルカリ性",["pH3はアルカリ性、pH11は酸性","どちらも酸性","どちらもアルカリ性"],"7より小さい値は酸性、7より大きい値はアルカリ性。"],
+[18,"pHの値が小さいほど、どうなるか。","酸性が強くなる",["酸性が弱くなる","変わらない","アルカリ性が強くなる"],"pHが小さいほど酸性が強く、大きいほどアルカリ性が強い。"],
+[19,"酸とアルカリが混ざり、たがいの性質を打ち消し合う反応を何というか。","中和",["電離","電気分解","蒸発"],"酸のH⁺とアルカリのOH⁻が結びついて水ができる反応が中和。"],
+[19,"中和をイオンで表した式はどれか。","H⁺ + OH⁻ → H₂O",["H⁺ + OH⁻ → H₂","Na⁺ + Cl⁻ → H₂O","H⁻ + OH⁺ → H₂O"],"H⁺ と OH⁻ が1個ずつ結びついて水(H₂O)ができる。"],
+[19,"塩酸に水酸化ナトリウム水溶液を加えて、ちょうど中性になったとき、BTB液は何色か。","緑色",["黄色","青色","赤色"],"BTB液は中性で緑色になる。"],
+[20,"酸の陰イオンとアルカリの陽イオンが結びついてできる物質を何というか。","塩",["酸","電解質","溶媒"],"中和でできる、水以外の物質を塩という。例:塩化ナトリウム。"],
+[20,"塩酸と水酸化ナトリウム水溶液の中和を表す化学反応式はどれか。","HCl + NaOH → NaCl + H₂O",["HCl + NaOH → NaCl + H₂","HCl + NaOH → NaH + ClOH","HCl + NaOH → Na + HClO"],"塩化ナトリウム(塩)と水ができる。"],
+[20,"硫酸と水酸化バリウム水溶液を混ぜると白い沈殿ができる。この物質はどれか。","硫酸バリウム",["水酸化バリウム","塩化バリウム","硫酸ナトリウム"],"SO₄²⁻ と Ba²⁺ が結びついた硫酸バリウムは水に溶けにくく、沈殿する。"],
+[21,"塩酸にうすい水酸化ナトリウム水溶液を少しずつ加えると、H⁺の数はどう変化するか。","だんだん減る",["増える","変わらない","急に増える"],"加えた OH⁻ と結びついて水になるので、H⁺ は減っていく。"],
+[21,"中和がちょうど完全に起こった直後の混合液に含まれるイオンはどれか。(水は除く)","Na⁺ と Cl⁻",["H⁺ と OH⁻","H⁺ と Cl⁻","Na⁺ と OH⁻"],"H⁺ と OH⁻ は水になって消え、Na⁺ と Cl⁻ が残る(塩が溶けた状態)。"],
+[21,"中和が完全に起こったあとも水酸化ナトリウム水溶液を加え続けると、混合液は何性になるか。","アルカリ性",["酸性","中性のまま","無色になる"],"結びつく H⁺ がなくなるので、OH⁻ が残ってアルカリ性になる。"],
+[22,"塩化銅水溶液の電気分解で、陰極と陽極に生じる物質の組み合わせはどれか。","陰極:銅、陽極:塩素",["陰極:塩素、陽極:銅","陰極:水素、陽極:塩素","陰極:銅、陽極:水素"],"陽イオンの Cu²⁺ は陰極で銅に、陰イオンの Cl⁻ は陽極で塩素になる。"],
+[22,"原子がイオンになるとき、移動する粒子はどれか。","電子",["陽子","中性子","原子核"],"イオンは電子の出入りでできる。陽子と中性子は原子核の中にあり、移動しない。"],
+[22,"非電解質の組み合わせはどれか。","砂糖とエタノール",["塩化ナトリウムと塩化水素","砂糖と塩化水素","エタノールと塩化ナトリウム"],"砂糖とエタノールは水に溶けてもイオンに分かれない。"],
+[23,"ダニエル電池を使ったときの、電極の質量変化はどれか。","+極は増え、−極は減る",["+極は減り、−極は増える","どちらも増える","どちらも減る"],"+極には銅が付着して増え、−極では亜鉛が溶けて減る。"],
+[23,"pH試験紙で調べるとpH2だった。この水溶液に多く含まれるイオンはどれか。","水素イオン(H⁺)",["水酸化物イオン(OH⁻)","ナトリウムイオン(Na⁺)","電子"],"pHが小さい(酸性)ほど、H⁺ が多い。"],
+[23,"水酸化ナトリウム水溶液と塩酸を混ぜて中性になった。水酸化ナトリウム水溶液が含んでいたOH⁻はどうなったか。","H⁺と結びついて水になった",["銅になった","電子になった","そのまま増えた"],"OH⁻ は H⁺ と結びついて水(H₂O)になった。"],
+[24,"電解質の水溶液に電流が流れる理由はどれか。","電解質が電離して、陽イオンと陰イオンが電気を運ぶから",["水が電気を発生させるから","溶質が熱を出すから","電子が水に溶けるから"],"電離してできたイオンが、水溶液の中で電気を運ぶ。"],
+[24,"ダニエル電池の−極で起こることはどれか。","亜鉛原子が電子を失い、亜鉛イオンになって溶け出す",["銅イオンが電子を受け取って銅になる","水素が発生する","塩素が発生する"],"−極では Zn → Zn²⁺ + 2e⁻。出た電子は導線を通って+極へ向かう。"],
+[24,"中和の説明として正しいものはどれか。","酸のH⁺とアルカリのOH⁻が結びついて水ができる反応",["H⁺ と H⁺ が結びつく反応","酸が電離する反応","水が電気分解される反応"],"中和は H⁺ + OH⁻ → H₂O。たがいの性質を打ち消し合う。"],
+];
+const cnt={};
+const QS=RAW.map(r=>{cnt[r[0]]=(cnt[r[0]]||0)+1;return{id:r[0]+"-"+cnt[r[0]],n:r[0],q:r[1],c:[r[2]].concat(r[3]),e:r[4]}});
+const QMAP={};QS.forEach(q=>QMAP[q.id]=q);
+const SETS=[
+ {key:'s1',tag:'1回目',title:'第1〜8回',desc:'電離、原子の構造、イオン、電気分解(塩化銅)',range:[1,8]},
+ {key:'s2',tag:'2回目',title:'第9〜16回',desc:'塩酸の電気分解、電池、酸とアルカリ、電離',range:[9,16]},
+ {key:'s3',tag:'3回目',title:'第17〜24回',desc:'イオンの移動、pH、中和、総合',range:[17,24]},
+ {key:'rnd',tag:'チャレンジ',title:'ランダム10問',desc:'全72問から10問。力試しや朝の1セットに',range:null}
+];
+
+/* ---------- 図解 ---------- */
+const S=(h,inner)=>`<svg class="fig" viewBox="0 0 320 ${h}" role="img" aria-label="図解">${inner}</svg>`;
+const T=(x,y,s,c='',a='middle')=>`<text x="${x}" y="${y}" text-anchor="${a}" class="${c}">${s}</text>`;
+const ion=(x,y,l,t,r=13)=>`<circle cx="${x}" cy="${y}" r="${r}" class="i-${t}"/><text x="${x}" y="${y+3.5}" text-anchor="middle" class="it">${l}</text>`;
+const arrow=(x1,y1,x2,y2,c='var(--mute)')=>{const a=Math.atan2(y2-y1,x2-x1),h=7;const p=[[x2,y2],[x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4)],[x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4)]].map(q=>q.map(v=>v.toFixed(1)).join(',')).join(' ');return `<line x1="${x1}" y1="${y1}" x2="${(x2-3*Math.cos(a)).toFixed(1)}" y2="${(y2-3*Math.sin(a)).toFixed(1)}" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/><polygon points="${p}" fill="${c}"/>`};
+const beaker=(x,y,w,h,lv)=>`<rect x="${x+1}" y="${y+h*(1-lv)}" width="${w-2}" height="${h*lv-1}" class="wtr"/><path d="M${x} ${y} V${y+h} H${x+w} V${y}" class="ln"/>`;
+const dot=(x,y,t)=>`<circle cx="${x}" cy="${y}" r="4" fill="${t==='p'?'var(--pos)':'var(--neg)'}"/>`;
+function figElec(){
+ const panel=(cx,lit,name,sub)=>{
+  let s=beaker(cx-45,62,90,70,.7);
+  s+=`<line x1="${cx-20}" y1="40" x2="${cx-20}" y2="112" class="ln" stroke-width="3"/><line x1="${cx+20}" y1="40" x2="${cx+20}" y2="112" class="ln" stroke-width="3"/>`;
+  s+=`<path d="M${cx-20} 40 V22 H${cx-9} M${cx+9} 22 H${cx+20} V40" class="ln"/>`;
+  s+=`<circle cx="${cx}" cy="22" r="9" fill="${lit?'#fbd34d':'var(--card)'}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  if(lit){s+=[[0,-14,0,-19],[-12,-8,-16,-12],[12,-8,16,-12]].map(r=>`<line x1="${cx+r[0]}" y1="${22+r[1]}" x2="${cx+r[2]}" y2="${22+r[3]}" stroke="#e8a900" stroke-width="1.5" stroke-linecap="round"/>`).join('');
+   s+=dot(cx-6,92,'p')+dot(cx+8,104,'n')+dot(cx+2,80,'n')+dot(cx-8,112,'p')+dot(cx+12,88,'p');}
+  return s+T(cx,152,name,'b')+T(cx,168,sub,'sm');
+ };
+ return S(178,panel(85,true,'電解質','電流が流れる(点灯)')+panel(235,false,'非電解質','電流が流れない'));
+}
+function figIonize(){
+ let s=`<rect x="24" y="44" width="92" height="84" rx="10" class="box"/>`;
+ s+=ion(52,72,'Na⁺','p',14)+ion(88,72,'Cl⁻','n',14)+ion(52,106,'Cl⁻','n',14)+ion(88,106,'Na⁺','p',14);
+ s+=T(70,38,'塩化ナトリウム(固体)','sm');
+ s+=arrow(126,86,178,86)+T(152,76,'水に溶ける','sm');
+ s+=`<rect x="190" y="44" width="110" height="84" rx="10" class="wtr"/>`;
+ s+=ion(216,70,'Na⁺','p',14)+ion(268,66,'Cl⁻','n',14)+ion(228,108,'Cl⁻','n',14)+ion(276,104,'Na⁺','p',14);
+ s+=T(245,38,'水溶液','sm');
+ s+=T(160,156,'NaCl → Na⁺ + Cl⁻','b')+T(160,174,'電離:陽イオンと陰イオンに分かれる','sm');
+ return S(184,s);
+}
+function figAtom(){
+ const cx=100,cy=85;
+ let s=`<circle cx="${cx}" cy="${cy}" r="60" fill="none" stroke="var(--mute)" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+ s+=`<circle cx="${cx}" cy="${cy}" r="26" class="box"/>`;
+ s+=[[-9,-8,'+','i-p'],[9,-6,'+','i-p'],[0,10,'+','i-p'],[-12,8,'','i-0'],[12,10,'','i-0']].map(p=>`<circle cx="${cx+p[0]}" cy="${cy+p[1]}" r="7.5" class="${p[3]}"/>${p[2]?`<text x="${cx+p[0]}" y="${cy+p[1]+3.5}" text-anchor="middle" class="it pos">+</text>`:''}`).join('');
+ s+=[30,150,270].map(d=>{const a=d*Math.PI/180;const x=cx+60*Math.cos(a),y=cy+60*Math.sin(a);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" class="i-n"/><text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" text-anchor="middle" class="it neg">−</text>`}).join('');
+ s+=T(190,42,'原子核','b','start')+T(190,58,'陽子(+)と中性子(0)','sm','start');
+ s+=T(190,104,'電子(−)','b','start')+T(190,122,'陽子の数 = 電子の数','sm','start')+T(190,138,'→ 全体では電気が0','sm','start');
+ return S(170,s);
+}
+function figIonChange(kind,name,p,k){
+ const cat=kind==='cation';name=name||(cat?'Na':'Cl');p=p||(cat?11:17);k=k||1;
+ const after=cat?p-k:p+k, sup=(k>1?'²':'')+(cat?'⁺':'⁻');
+ let s=`<circle cx="70" cy="68" r="34" class="box"/>`+T(70,66,name,'b')+T(70,84,`+${p} / −${p}`,'sm');
+ s+=arrow(112,68,196,68);
+ s+=T(154,20,cat?`電子を${k}個失う`:`電子を${k}個受け取る`,'sm');
+ for(let i=0;i<k;i++)s+=ion(154+(i-(k-1)/2)*26,42,'e⁻','n',11);
+ s+=`<circle cx="250" cy="68" r="34" class="${cat?'i-p':'i-n'}"/>`+T(250,66,name+sup,'b')+T(250,84,`+${p} / −${after}`,'sm');
+ s+=T(160,132,cat?`+が${k}つ多い → 陽イオン`:`−が${k}つ多い → 陰イオン`,'b '+(cat?'pos':'neg'));
+ return S(146,s);
+}
+function figElectro(o){
+ let s=beaker(60,70,200,95,.75);
+ s+=`<rect x="116" y="50" width="8" height="95" rx="2" fill="var(--mute)"/><rect x="196" y="50" width="8" height="95" rx="2" fill="var(--mute)"/>`;
+ s+=`<path d="M120 50 V28 H152 M164 28 H200 V50" class="ln"/><line x1="152" y1="21" x2="152" y2="35" class="ln" stroke-width="3"/><line x1="164" y1="14" x2="164" y2="42" class="ln" stroke-width="3"/>`;
+ s+=T(142,24,'−','b neg')+T(174,24,'+','b pos');
+ if(o.cat==='Cu') s+=`<rect x="124" y="108" width="6" height="34" rx="2" fill="#c2763c"/><rect x="110" y="108" width="6" height="34" rx="2" fill="#c2763c"/>`;
+ else s+=[[108,122],[130,104],[110,96]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2"/>`).join('');
+ s+=[[208,118],[190,102],[210,92],[192,130]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#d9f09a" stroke="var(--ink)" stroke-width="1.2"/>`).join('');
+ s+=ion(84,125,o.ionL,'p',17)+arrow(102,125,112,125,'var(--pos)')+ion(236,125,'Cl⁻','n',17)+arrow(218,125,208,125,'var(--neg)');
+ s+=T(120,184,'陰極(−)','b')+T(120,199,o.catSub,'sm')+T(200,184,'陽極(+)','b')+T(200,199,'Cl₂(塩素)が発生','sm');
+ return S(208,s);
+}
+function figSeries(){
+ let s=T(24,26,'イオンになりやすい','sm','start')+T(296,26,'なりにくい','sm','end')+arrow(24,34,296,34);
+ [['Mg','マグネシウム',24],['Zn','亜鉛',120],['Cu','銅',216]].forEach(b=>{s+=`<rect x="${b[2]}" y="48" width="80" height="48" rx="10" class="bx2"/>`+T(b[2]+40,70,b[0],'b')+T(b[2]+40,87,b[1],'sm')});
+ s+=T(112,76,'>','b')+T(208,76,'>','b');
+ s+=T(160,128,'Zn + Cu²⁺ → Zn²⁺ + Cu','b')+T(160,146,'硫酸銅水溶液に亜鉛板を入れると、銅が付着する','sm');
+ return S(158,s);
+}
+function figDaniell(mass){
+ let s=beaker(40,70,240,95,.75);
+ s+=`<line x1="160" y1="70" x2="160" y2="165" stroke="var(--mute)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+ s+=`<rect x="75" y="48" width="12" height="100" rx="2" fill="#94a3b8"/><rect x="245" y="48" width="12" height="100" rx="2" fill="#c2763c"/>`;
+ s+=`<path d="M81 48 V28 H154 M168 28 H251 V48" class="ln"/><circle cx="161" cy="28" r="8" fill="#fbd34d" stroke="var(--ink)" stroke-width="1.5"/>`;
+ s+=arrow(100,28,140,28,'var(--neg)')+arrow(184,28,224,28,'var(--neg)')+T(120,18,'e⁻の流れ','sm')+T(204,18,'e⁻の流れ','sm');
+ s+=T(118,156,'ZnSO₄水溶液','sm')+T(206,156,'CuSO₄水溶液','sm')+T(160,66,'セロハン','sm');
+ s+=T(81,184,'−極 Zn','b neg')+T(251,184,'+極 Cu','b pos');
+ s+=T(81,200,'Zn → Zn²⁺ + 2e⁻','sm')+T(251,200,'Cu²⁺ + 2e⁻ → Cu','sm');
+ if(mass)s+=T(81,218,'溶けて質量が減る','b')+T(251,218,'銅が付着して質量が増える','b');
+ return S(mass?226:210,s);
+}
+function figBattery(){
+ const c=[['一次電池','使い切り','乾電池など',12],['二次電池','充電できる','蓄電池など',114],['燃料電池','H₂ + O₂ → H₂O','排出は水だけ',216]];
+ let s='';c.forEach(b=>{s+=`<rect x="${b[3]}" y="14" width="92" height="104" rx="12" class="box"/>`+T(b[3]+46,44,b[0],'b')+T(b[3]+46,70,b[1],'sm')+T(b[3]+46,92,b[2],'sm')});
+ return S(130,s);
+}
+function figLitmus(){
+ let s=T(20,18,'リトマス紙','b','start');
+ s+=`<rect x="20" y="28" width="64" height="24" rx="3" fill="#60a5fa"/>`+T(52,45,'青','b').replace('class="b"','class="b" style="fill:#fff"');
+ s+=arrow(94,40,150,40)+T(122,30,'酸性','sm')+`<rect x="160" y="28" width="64" height="24" rx="3" fill="#f26a6a"/>`+T(192,45,'赤','b').replace('class="b"','class="b" style="fill:#fff"');
+ s+=`<rect x="20" y="64" width="64" height="24" rx="3" fill="#f26a6a"/>`+T(52,81,'赤','b').replace('class="b"','class="b" style="fill:#fff"');
+ s+=arrow(94,76,150,76)+T(122,66,'アルカリ性','sm')+`<rect x="160" y="64" width="64" height="24" rx="3" fill="#60a5fa"/>`+T(192,81,'青','b').replace('class="b"','class="b" style="fill:#fff"');
+ s+=T(20,118,'BTB液','b','start');
+ [[70,'#facc15','酸性'],[160,'#4ade80','中性'],[250,'#60a5fa','アルカリ性']].forEach(b=>{s+=`<circle cx="${b[0]}" cy="142" r="14" fill="${b[1]}" stroke="var(--ink)" stroke-width="1.2"/>`+T(b[0],172,b[2],'sm')});
+ return S(184,s);
+}
+function figAcidAlk(){
+ let s=`<rect x="12" y="12" width="148" height="128" rx="12" class="box"/><rect x="168" y="12" width="140" height="128" rx="12" class="box"/>`;
+ s+=T(86,34,'酸(塩酸)','b')+ion(60,70,'H⁺','p',17)+ion(112,70,'Cl⁻','n',15)+T(86,106,'HCl → H⁺ + Cl⁻','sm')+T(86,126,'H⁺が酸性のもと','b pos');
+ s+=T(238,34,'アルカリ(NaOH)','b')+ion(204,70,'Na⁺','p',15)+ion(262,70,'OH⁻','n',17)+T(238,106,'NaOH → Na⁺ + OH⁻','sm')+T(238,126,'OH⁻がアルカリ性のもと','b neg');
+ return S(150,s);
+}
+function figMigrate(){
+ let s=T(160,16,'青リトマス紙+塩酸','sm');
+ s+=`<rect x="50" y="26" width="220" height="34" rx="3" fill="#bcd6fb"/><rect x="156" y="26" width="114" height="34" rx="3" fill="#f6a3a3"/>`;
+ s+=`<rect x="38" y="22" width="10" height="42" rx="2" fill="var(--mute)"/><rect x="272" y="22" width="10" height="42" rx="2" fill="var(--mute)"/>`;
+ s+=T(30,48,'+','b pos','end')+T(290,48,'−','b neg','start')+arrow(140,43,236,43,'var(--pos)').replace('stroke="var(--pos)"','stroke="#fff"').replace('fill="var(--pos)"','fill="#fff"');
+ s+=T(190,78,'H⁺ → 赤色は陰極側へ','sm');
+ s+=T(160,112,'赤色リトマス紙+水酸化ナトリウム水溶液','sm');
+ s+=`<rect x="50" y="122" width="220" height="34" rx="3" fill="#f6c8c8"/><rect x="50" y="122" width="116" height="34" rx="3" fill="#8bb8f5"/>`;
+ s+=`<rect x="38" y="118" width="10" height="42" rx="2" fill="var(--mute)"/><rect x="272" y="118" width="10" height="42" rx="2" fill="var(--mute)"/>`;
+ s+=T(30,144,'+','b pos','end')+T(290,144,'−','b neg','start')+arrow(190,139,92,139,'#fff');
+ s+=T(130,174,'OH⁻ → 青色は陽極側へ','sm');
+ return S(184,s);
+}
+function figPh(marks){
+ marks=marks||[];
+ let s=`<defs><linearGradient id="phg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#ef4444"/><stop offset=".25" stop-color="#f59e0b"/><stop offset=".5" stop-color="#22c55e"/><stop offset=".75" stop-color="#3b82f6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>`;
+ s+=`<rect x="20" y="40" width="280" height="26" rx="5" fill="url(#phg)"/>`;
+ s+=T(90,16,'酸性','b')+T(160,16,'中性','b')+T(230,16,'アルカリ性','b');
+ marks.forEach(v=>{const x=20+280*v/14;s+=T(x,33,'pH'+v,'b')+`<circle cx="${x}" cy="53" r="7" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>`});
+ s+=T(20,86,'0','sm')+T(160,86,'7','sm')+T(300,86,'14','sm');
+ s+=arrow(150,102,34,102)+T(92,122,'小さいほど酸性が強い','sm')+arrow(170,102,286,102)+T(228,122,'大きいほどアルカリ性が強い','sm');
+ return S(134,s);
+}
+function figNeut(){
+ let s=ion(48,48,'H⁺','p',15)+T(76,52,'+','b')+ion(104,48,'OH⁻','n',16)+arrow(132,48,178,48)+`<circle cx="208" cy="48" r="20" class="i-0"/>`+T(208,52,'H₂O','b');
+ s+=ion(272,34,'Na⁺','p',14)+ion(272,66,'Cl⁻','n',14)+T(272,92,'塩(水に溶けたまま)','sm');
+ s+=T(160,112,'酸のH⁺ + アルカリのOH⁻ → 水','b')+T(160,134,'HCl + NaOH → NaCl + H₂O','sm');
+ return S(146,s);
+}
+function figNeutChange(){
+ const cols=[{x:12,t:'酸性',s:'H⁺が残る',d:['h','h','c','c','c','c','n','n']},{x:114,t:'ちょうど中和',s:'H⁺もOH⁻もなし',d:['n','n','n','n','c','c','c','c']},{x:216,t:'アルカリ性',s:'OH⁻が残る',d:['n','n','n','n','n','n','c','c','c','c','o','o']}];
+ const dd=(k,x,y)=>k==='h'?`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--pos)"/>`:k==='o'?`<circle cx="${x}" cy="${y}" r="5.5" fill="var(--neg)"/>`:k==='n'?`<circle cx="${x}" cy="${y}" r="5.5" fill="none" stroke="var(--pos)" stroke-width="1.6"/>`:`<circle cx="${x}" cy="${y}" r="5.5" fill="none" stroke="var(--neg)" stroke-width="1.6"/>`;
+ let s='';
+ cols.forEach(c=>{s+=`<rect x="${c.x}" y="16" width="92" height="84" rx="10" class="box"/>`;c.d.forEach((k,i)=>{s+=dd(k,c.x+16+(i%4)*20,34+Math.floor(i/4)*22)});s+=T(c.x+46,120,c.t,'b')+T(c.x+46,136,c.s,'sm')});
+ s+=`<circle cx="30" cy="160" r="5" fill="var(--pos)"/>`+T(40,164,'H⁺','sm','start')+`<circle cx="76" cy="160" r="5" fill="var(--neg)"/>`+T(86,164,'OH⁻','sm','start')+`<circle cx="130" cy="160" r="5" fill="none" stroke="var(--pos)" stroke-width="1.6"/>`+T(140,164,'Na⁺','sm','start')+`<circle cx="186" cy="160" r="5" fill="none" stroke="var(--neg)" stroke-width="1.6"/>`+T(196,164,'Cl⁻','sm','start');
+ return S(172,s);
+}
+function figIonGen(c){
+ let s=`<rect x="24" y="44" width="92" height="84" rx="10" class="box"/>`+T(70,38,c.cap,'sm')+`<text x="70" y="92" text-anchor="middle" class="b" style="font-size:18px">${c.formula}</text>`;
+ s+=arrow(126,86,178,86)+T(152,76,'水に溶ける','sm');
+ s+=`<rect x="190" y="44" width="110" height="84" rx="10" class="wtr"/>`+T(245,38,'水溶液','sm');
+ c.ions.forEach(i=>{s+=ion(i[0],i[1],i[2],i[3],i[4])});
+ s+=T(160,156,c.eq,'b')+T(160,174,c.sub||'電離:陽イオンと陰イオンに分かれる','sm');
+ return S(184,s);
+}
+const IONCFG={
+ HCl:{cap:'塩化水素',formula:'HCl',ions:[[224,70,'H⁺','p',14],[272,64,'Cl⁻','n',14],[236,108,'H⁺','p',14],[280,104,'Cl⁻','n',14]],eq:'HCl → H⁺ + Cl⁻'},
+ CuCl2:{cap:'塩化銅',formula:'CuCl₂',ions:[[224,84,'Cu²⁺','p',18],[270,62,'Cl⁻','n',14],[272,108,'Cl⁻','n',14]],eq:'CuCl₂ → Cu²⁺ + 2Cl⁻'},
+ NaOH:{cap:'水酸化ナトリウム',formula:'NaOH',ions:[[224,72,'Na⁺','p',14],[268,100,'OH⁻','n',15]],eq:'NaOH → Na⁺ + OH⁻'},
+ H2SO4:{cap:'硫酸',formula:'H₂SO₄',ions:[[216,66,'H⁺','p',14],[216,106,'H⁺','p',14],[270,86,'SO₄²⁻','n',20]],eq:'H₂SO₄ → 2H⁺ + SO₄²⁻'},
+ BaOH2:{cap:'水酸化バリウム',formula:'Ba(OH)₂',ions:[[222,86,'Ba²⁺','p',18],[272,64,'OH⁻','n',15],[272,108,'OH⁻','n',15]],eq:'Ba(OH)₂ → Ba²⁺ + 2OH⁻'}
+};
+function figIonList(hl){
+ const row=(arr,y,ty,t)=>arr.map(a=>`${a[0]===hl?`<circle cx="${a[3]}" cy="${y}" r="${a[4]+5}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`:''}${ion(a[3],y,a[0],t,a[4])}${T(a[3],ty,a[1],'sm')}`).join('');
+ let s=T(12,20,'陽イオン(+)','b pos','start')+row([['H⁺','水素',0,52,16],['Na⁺','ナトリウム',0,124,16],['Cu²⁺','銅',0,196,18],['NH₄⁺','アンモニウム',0,268,18]],46,80,'p');
+ s+=T(12,104,'陰イオン(−)','b neg','start')+row([['Cl⁻','塩化物',0,64,16],['OH⁻','水酸化物',0,160,16],['SO₄²⁻','硫酸',0,256,20]],132,172,'n');
+ return S(184,s);
+}
+function figMg(){
+ let s=T(160,16,'酸性の水溶液(塩酸)+マグネシウム','sm');
+ s+=beaker(100,34,100,90,.72);
+ s+=`<rect x="146" y="26" width="9" height="86" rx="2" fill="#cbd5e1" stroke="var(--mute)" stroke-width="1"/>`+T(150,138,'Mg','sm');
+ s+=[[170,100,4],[176,84,5],[166,68,4],[178,52,5]].map(b=>`<circle cx="${b[0]}" cy="${b[1]}" r="${b[2]}" fill="var(--card)" stroke="var(--ink)" stroke-width="1.2"/>`).join('');
+ s+=arrow(206,56,240,44)+T(246,44,'H₂(水素)','b','start')+T(220,78,'が発生する','sm','start');
+ s+=T(160,152,'Mg + 2HCl → MgCl₂ + H₂','b');
+ return S(162,s);
+}
+function figBaSO4(){
+ let s=ion(40,50,'Ba²⁺','p',18)+ion(40,100,'SO₄²⁻','n',20)+arrow(64,62,104,84)+arrow(66,92,104,96);
+ s+=beaker(110,36,100,86,.74);
+ s+=`<path d="M112 120 V108 Q160 98 208 108 V120 Z" fill="#f8fafc" stroke="var(--mute)" stroke-width="1.2"/>`;
+ s+=arrow(226,100,244,100)+T(250,88,'白い沈殿','b','start')+T(250,106,'硫酸バリウム','sm','start')+T(250,120,'BaSO₄','sm','start');
+ s+=T(160,150,'H₂SO₄ + Ba(OH)₂ → BaSO₄↓ + 2H₂O','b');
+ return S(162,s);
+}
+function fig(n,id){
+ let k=(id&&FIGQ[id])||FIGKEY[n];const parts=k.split(':');k=parts[0];
+ switch(k){
+  case 'elec':return figElec();case 'ionize':return figIonize();case 'atom':return figAtom();
+  case 'i':{const c=Object.assign({},IONCFG[parts[1]]);if(parts[2]==='acid')c.sub='H⁺ が酸性のもと(Cl⁻ ではない)';return figIonGen(c)}
+  case 'list':return figIonList(parts[1]);
+  case 'cation':return parts[1]==='Cu'?figIonChange('cation','Cu',29,2):figIonChange('cation');
+  case 'anion':return figIonChange('anion');
+  case 'cucl2':return figElectro({cat:'Cu',ionL:'Cu²⁺',catSub:'銅が付着'});
+  case 'hcl':return figElectro({cat:'H',ionL:'H⁺',catSub:'H₂(水素)が発生'});
+  case 'series':return figSeries();case 'daniell':return figDaniell(parts[1]==='mass');case 'battery':return figBattery();
+  case 'litmus':return figLitmus();case 'acidalk':return figAcidAlk();case 'migrate':return figMigrate();
+  case 'ph':return figPh(parts[1]?parts[1].split(',').map(Number):[]);case 'neut':return figNeut();case 'neutchange':return figNeutChange();
+  case 'mg':return figMg();case 'baso4':return figBaSO4();
+ }return '';
+}
+
+/* ---------- 記録(この端末のブラウザ) ---------- */
+const KEY='ion-dojo-v1';let mem=null;
+function load(){try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);d.wrong=d.wrong||{};d.stat=d.stat||{};d.hist=d.hist||[];d.best=d.best||{};return d}}catch(e){}return mem||{wrong:{},stat:{},hist:[],best:{}}}
+function save(d){mem=d;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+
+/* ---------- 画面 ---------- */
+const app=document.getElementById('app');
+let ST=null,VIEW='home',resetArm=false;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const wrongIds=d=>Object.keys(d.wrong).filter(id=>QMAP[id]);
+const fmtDate=t=>{try{return new Date(t).toLocaleDateString('ja-JP',{month:'numeric',day:'numeric'})}catch(e){return ''}};
+const toTop=()=>window.scrollTo(0,0);
+
+function home(){
+ VIEW='home';const d=load();
+ const wr=wrongIds(d);
+ let tot=0,cor=0;Object.values(d.stat).forEach(s=>{cor+=s[0];tot+=s[1]});
+ const acc=tot?Math.round(cor/tot*100)+'%':'—';
+ const weak=[];
+ for(let n=1;n<=24;n++){let c=0,t=0;QS.filter(q=>q.n===n).forEach(q=>{const s=d.stat[q.id];if(s){c+=s[0];t+=s[1]}});if(t&&c<t)weak.push({n,r:c/t})}
+ weak.sort((a,b)=>a.r-b.r);
+ const cards=SETS.map(s=>{const b=d.best[s.key];const cnt=s.range?QS.filter(q=>q.n>=s.range[0]&&q.n<=s.range[1]).length:10;
+  return `<button class="set" data-set="${s.key}"><span class="tag">${s.tag}</span><h3>${s.title}</h3><p>${s.desc}</p><div class="meta"><span>${cnt}問</span><span>${b?`最高 <b>${b.score}/${b.total}</b>`:'未挑戦'}</span></div></button>`}).join('');
+ const rv=wr.length?`<div class="rv-head"><div><div class="big">${wr.length}<small>問 要復習</small></div><p class="empty" style="margin-top:2px">間違えた問題は、正解するまでここに残ります。</p></div><div class="btns"><button class="btn warn" data-act="focus">間違いを集中して解く</button><button class="btn" data-act="notes">復習ノート</button></div></div>`
+  :`<p class="empty">${tot?'いま復習が必要な問題はありません。よく頑張りました。':'問題を解くと、間違えたところがここに集まります。'}</p>`;
+ const wk=weak.length?`<ul class="weak">${weak.slice(0,3).map(w=>`<li><span class="nm">第${w.n}回 ${UNITS[w.n]}</span><div class="meter"><i style="width:${Math.round(w.r*100)}%"></i></div><span class="pc">${Math.round(w.r*100)}%</span></li>`).join('')}</ul><p class="empty" style="margin-top:8px;font-size:12.5px">正答率が低い単元(これまでの合計)</p>`:'';
+ const hist=d.hist.length?`<ul class="hist">${d.hist.slice(0,4).map(h=>`<li><span>${fmtDate(h.at)}　${h.title}</span><b>${h.score} / ${h.total}</b></li>`).join('')}</ul>`:'<p class="empty">まだ記録はありません。</p>';
+ app.innerHTML=`
+ <section class="hero"><p class="eyebrow">中学3年 理科</p><h1>イオン道場</h1><p class="lead">水溶液とイオン、24回分・72問。答えるとすぐに採点され、図解つきの解説が出ます。間違えた問題は自動で記録されるので、苦手なところだけ集中して練習できます。</p>
+ <button class="cta" data-act="go">問題を選ぶ ↓</button>
+ <div class="stats"><div class="stat"><b>${tot}</b><span>解いた問題(延べ)</span></div><div class="stat"><b>${acc}</b><span>これまでの正答率</span></div><div class="stat"><b>${wr.length}</b><span>要復習</span></div></div></section>
+ <section class="sec" id="sets"><h2>問題を選ぶ</h2><div class="grid">${cards}</div></section>
+ <section class="sec"><h2>間違えたところを復習</h2><div class="panel ${wr.length?'focus':''}">${rv}${wk}</div></section>
+ <section class="sec"><h2>最近の結果</h2><div class="panel">${hist}</div></section>
+ <div class="foot"><span>記録はこの端末のブラウザに保存されます。</span><button class="link" data-act="reset">${resetArm?'もう一度押すと記録を消します':'記録をリセット'}</button></div>`;
+ toTop();
+}
+function start(title,key,list,mode){ST={title,key,list,i:0,score:0,res:[],mode,done:false};showQ()}
+function showQ(){
+ VIEW='quiz';const q=ST.list[ST.i];
+ ST.ch=shuffle(q.c.map((t,k)=>({t,ok:k===0})));ST.done=false;
+ const pct=Math.round(ST.i/ST.list.length*100);
+ app.innerHTML=`
+ <div class="qtop"><button class="ghost" data-act="home">← やめる</button><div class="qmeta"><span><b id="qn">${ST.i+1}</b> / ${ST.list.length}</span><span>得点 <b id="sc">${ST.score}</b> / <span id="an">${ST.res.length}</span></span></div></div>
+ <div class="bar"><i style="width:${pct}%"></i></div>
+ <article class="qcard"><p class="unit">第${q.n}回 ${UNITS[q.n]}</p><h2 class="q" tabindex="-1" id="qh">${q.q}</h2>
+ <div class="choices" role="group" aria-label="選択肢">${ST.ch.map((c,i)=>`<button class="ch" data-i="${i}"><span class="k">${i+1}</span><span>${c.t}</span></button>`).join('')}</div>
+ <div class="fb" id="fb" aria-live="polite"></div></article>`;
+ toTop();document.getElementById('qh').focus({preventScroll:true});
+}
+function answer(i){
+ if(ST.done)return;ST.done=true;
+ const q=ST.list[ST.i],c=ST.ch[i],ok=c.ok;
+ const d=load();const s=d.stat[q.id]||[0,0];s[1]++;if(ok){s[0]++;delete d.wrong[q.id]}else d.wrong[q.id]=(d.wrong[q.id]||0)+1;d.stat[q.id]=s;save(d);
+ if(ok)ST.score++;ST.res.push({id:q.id,ok});
+ document.querySelectorAll('.ch').forEach((b,k)=>{b.disabled=true;if(ST.ch[k].ok)b.classList.add('ok');else if(k===i)b.classList.add('ng')});
+ document.getElementById('sc').textContent=ST.score;document.getElementById('an').textContent=ST.res.length;
+ const last=ST.i===ST.list.length-1;
+ const right=ST.ch.find(x=>x.ok).t;
+ document.getElementById('fb').innerHTML=`<div class="verdict ${ok?'ok':'ng'}"><span class="mk" aria-hidden="true">${ok?'○':'×'}</span><span>${ok?'正解!':'不正解'}</span></div>${ok?'':`<p class="ans">正しい答え: <b>${right}</b></p>`}<p class="exp">${q.e}</p><div class="figbox">${fig(q.n,q.id)}</div><div class="nextrow"><button class="btn pri" id="nx" data-act="next">${last?'結果を見る':'次の問題へ'}</button></div>`;
+ const nx=document.getElementById('nx');if(nx){nx.scrollIntoView({block:'nearest',behavior:'smooth'});nx.focus({preventScroll:true})}
+}
+function next(){if(!ST.done)return;ST.i++;if(ST.i>=ST.list.length)result();else showQ()}
+function result(){
+ VIEW='result';const total=ST.list.length,sc=ST.score,pct=Math.round(sc/total*100);
+ const d=load();d.hist.unshift({key:ST.key,title:ST.title,score:sc,total,at:Date.now()});d.hist=d.hist.slice(0,20);
+ if(ST.mode==='set'){const b=d.best[ST.key];if(!b||sc/total>b.score/b.total)d.best[ST.key]={score:sc,total}}
+ save(d);
+ const msg=pct===100?'全問正解!完ぺきです':pct>=80?'よくできました':pct>=60?'あと一歩。ここを固めよう':'ここから伸びます。復習しよう';
+ const R=52,C=2*Math.PI*R;
+ const miss=ST.res.filter(r=>!r.ok).map(r=>QMAP[r.id]);
+ app.innerHTML=`<section class="qcard res"><p class="unit">${ST.title}</p>
+ <div class="ring"><svg viewBox="0 0 120 120" width="170" height="170" aria-hidden="true"><circle class="trk" cx="60" cy="60" r="${R}" fill="none" stroke-width="10"/><circle class="val" id="rv" cx="60" cy="60" r="${R}" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/></svg><div class="num"><b>${sc}</b><small>/ ${total} 問</small></div></div>
+ <h2>${msg}</h2><p class="pc">正答率 ${pct}%</p>
+ <div class="btns">${miss.length?`<button class="btn warn" data-act="retrymiss">間違えた${miss.length}問をもう一度</button>`:''}<button class="btn pri" data-act="again">もう一度</button><button class="btn" data-act="home">ホームへ</button></div>
+ ${miss.length?`<div class="miss"><h3>間違えた問題</h3>${miss.map(q=>`<details class="mi"><summary>第${q.n}回 ${q.q}</summary><p class="a">正しい答え: <b>${q.c[0]}</b></p><p class="exp">${q.e}</p></details>`).join('')}</div>`:''}</section>`;
+ toTop();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{const v=document.getElementById('rv');if(v)v.style.strokeDashoffset=(C*(1-sc/total)).toFixed(1)}));
+ ST.miss=miss;
+}
+function notes(){
+ VIEW='notes';const d=load();const wr=wrongIds(d).map(id=>QMAP[id]).sort((a,b)=>a.n-b.n||(a.id>b.id?1:-1));
+ let html=`<div class="qtop"><button class="ghost" data-act="home">← ホームへ</button></div><h2 style="font-size:22px;margin:4px 0 4px">復習ノート</h2><p class="empty">間違えた問題と正しい答えです。正解すると、このノートから外れます。</p>`;
+ if(!wr.length)html+=`<div class="panel" style="margin-top:16px"><p class="empty">復習が必要な問題はありません。</p></div>`;
+ else{html+=`<div class="btns" style="margin:14px 0"><button class="btn warn" data-act="focus">この${wr.length}問を集中して解く</button></div>`;
+  let cur=0;wr.forEach(q=>{if(q.n!==cur){cur=q.n;html+=`<p class="note-u">第${q.n}回 ${UNITS[q.n]}</p>`}
+   html+=`<details class="mi"><summary>${q.q}</summary><p class="a">正しい答え: <b>${q.c[0]}</b>(間違えた回数 ${d.wrong[q.id]})</p><p class="exp">${q.e}</p><div class="figbox">${fig(q.n,q.id)}</div></details>`})}
+ app.innerHTML=html;toTop();
+}
+
+/* ---------- 操作 ---------- */
+app.addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.set){const s=SETS.find(x=>x.key===b.dataset.set);
+  const list=s.range?QS.filter(q=>q.n>=s.range[0]&&q.n<=s.range[1]):shuffle(QS).slice(0,10);
+  start(s.range?`${s.tag}(${s.title})`:s.title,s.key,list,'set');return}
+ if(b.classList.contains('ch')){answer(+b.dataset.i);return}
+ const a=b.dataset.act;if(!a)return;
+ if(a==='go'){document.getElementById('sets').scrollIntoView({behavior:'smooth'})}
+ else if(a==='home'){resetArm=false;home()}
+ else if(a==='next')next();
+ else if(a==='notes')notes();
+ else if(a==='focus'){const d=load();const l=shuffle(wrongIds(d).map(id=>QMAP[id]));if(l.length)start('間違いを集中練習','focus',l,'focus')}
+ else if(a==='retrymiss'){if(ST.miss&&ST.miss.length)start('間違いを集中練習','focus',shuffle(ST.miss),'focus')}
+ else if(a==='again'){const l=ST.mode==='set'&&ST.key==='rnd'?shuffle(QS).slice(0,10):ST.mode==='focus'?shuffle(wrongIds(load()).map(id=>QMAP[id])):ST.list;
+   if(l.length)start(ST.title,ST.key,l,ST.mode);else home()}
+ else if(a==='reset'){if(!resetArm){resetArm=true;home()}else{resetArm=false;save({wrong:{},stat:{},hist:[],best:{}});home()}}
+});
+document.addEventListener('keydown',e=>{
+ if(VIEW!=='quiz'||e.metaKey||e.ctrlKey||e.altKey)return;
+ if(!ST.done&&/^[1-4]$/.test(e.key)){e.preventDefault();answer(+e.key-1)}
+ else if(ST.done&&e.key==='Enter'){const nx=document.getElementById('nx');if(document.activeElement!==nx){e.preventDefault();next()}}
+});
+home();
+</script>
+
+</body></html>
